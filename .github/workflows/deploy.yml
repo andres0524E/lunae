@@ -1,0 +1,46 @@
+name: deploy static site to github pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: install dependencies
+        run: bun install
+
+      - name: build static site
+        env:
+          VITE_SUPABASE_URL: "https://c--7fd37b94-43d5-4a5a-922c-018ea3203dfc-prod.lovable.cloud"
+          VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_T-P22t8JLFEaq9FjvoER5A__MJosh6O"
+          VITE_SUPABASE_PROJECT_ID: "xcfinweanfovxhsipwmp"
+        run: bun run build
+
+      - name: upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v4
